@@ -3,6 +3,8 @@ using Amazon.Lambda.APIGatewayEvents;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2;
 using Newtonsoft.Json;
+using Amazon.SQS;
+using Amazon.SQS.Model;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -31,18 +33,28 @@ public class Function
             //do something
         }
 
-        /* read data from dynamodb
+        var sqs = new AmazonSQSClient();
+        var messRequest = new SendMessageRequest()
+        {
+            QueueUrl = "https://sqs.eu-central-1.amazonaws.com/302521879436/queue-demo",
+            MessageBody = $"Hello new user {name}"
+
+        };
+        var rsSqs = await sqs.SendMessageAsync(messRequest);
+
+        //read data from dynamodb
         var provider = new UserProvider(new AmazonDynamoDBClient()); //can use with DI 
         var users = await provider.GetUsers();
 
         context.Logger.Log($"Get name {0}");
-        return new APIGatewayProxyResponse() { 
+        return new APIGatewayProxyResponse()
+        {
             StatusCode = 200,
             Body = JsonConvert.SerializeObject(users)
+        };
 
-        };*/
-
-        //insert data from request 
+        /*
+         * //insert data from request 
         var user = JsonConvert.DeserializeObject<User>(request.Body);
         if (user == null) { return new APIGatewayProxyResponse() { StatusCode = 400 }; }; //bad request 
         var creator = new UserCreator(new AmazonDynamoDBClient());
@@ -52,6 +64,7 @@ public class Function
         {
             StatusCode = 200
         };
+        */
 
     }
 }
